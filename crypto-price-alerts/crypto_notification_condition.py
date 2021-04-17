@@ -1,6 +1,6 @@
 from enum import Enum
 from pycoingecko import CoinGeckoAPI 
-
+import time
 class Threshold(Enum):
     ABOVE = "above"
     BELOW = "below"
@@ -11,15 +11,22 @@ class CryptoNotificationCondition:
         self.name_of_coin = name_of_coin
         self.above_or_below = above_or_below
         self.threshold_usd = threshold_usd
+        
         self.current_price = 0
+        self.notify_triggered = False
         
     def should_notify(self):
         self.current_price = self._get_price()
-        
-        if self.above_or_below == Threshold.ABOVE:
-            return self.current_price > self.threshold_usd
-        if self.above_or_below == Threshold.BELOW:
-            return self.current_price < self.threshold_usd
+
+        # Don't notify more than once
+        if self.notify_triggered:
+            return False
+        else:
+            if self.above_or_below == Threshold.ABOVE:
+                self.notify_triggered = self.current_price > self.threshold_usd
+            elif self.above_or_below == Threshold.BELOW:
+                self.notify_triggered = self.current_price < self.threshold_usd
+            return self.notify_triggered
     
     def _get_price(self):
         cg = CoinGeckoAPI()
