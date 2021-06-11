@@ -3,6 +3,7 @@ from email_sender import EmailSender
 
 import time
 import argparse
+import sys
 
 parser = argparse.ArgumentParser(description='Send notifications on crypto prices')
 parser.add_argument('gmail_sender_address', type=str, help='Gmail address to send from')
@@ -10,17 +11,22 @@ parser.add_argument('email_receiver_address', type=str, help='Email Address to s
 args = parser.parse_args()
 
 email_sender = EmailSender(args.gmail_sender_address)
-condition1 = CryptoNotificationCondition('bitcoin', Threshold.ABOVE, 70000)
-condition2 = CryptoNotificationCondition('bitcoin', Threshold.BELOW, 60000)
-conditions = [condition1, condition2]
+
+conditions = []
+conditions.append(CryptoNotificationCondition('bitcoin', Threshold.ABOVE, 70000))
+conditions.append(CryptoNotificationCondition('bitcoin', Threshold.BELOW, 10000))
 
 print("Starting...")
-# Use Ctrl+C to exit
 while(True):
-    for condition in conditions:
-        if condition.should_notify():
-            email_sender.send_email(condition.get_email_message(), args.email_receiver_address)
-    # CoinGecko reportedly updates every 1 - 10 minutes
+    try:
+        for condition in conditions:
+            if condition.should_notify():
+                email_sender.send_email(condition.get_email_message(), args.email_receiver_address)
+                print("Sent email: " + condition.name_of_coin)
+    except:
+        print("Error occurred")
+        e1 = sys.exc_info()[0]
+        e2 = sys.exc_info()[1]
+        print(e1)
+        print(e2)
     time.sleep(60)
-
-
